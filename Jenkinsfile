@@ -39,11 +39,5 @@ pipeline {
                     sh "useradd -m -s /bin/bash -c '${params.NombreApellido}' -G ${params.Departamento} ${params.Login}"
                     sh "echo ${params.Login}:${passwordTemporal} | chpasswd"
 
-                }
-            }
-        }
-
-        
-    }
-}
+              
 
