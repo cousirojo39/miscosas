@@ -1,14 +1,27 @@
 pipeline {
     agent any
-    // 1. Datos de entrada 
-    parameters {
-        string(name: 'Login', description: 'Ingrese Nombre de Usuario', defaultValue: '')
-        string(name: 'NombreApellido', description: 'Ingrese su Nombre y Apellido', defaultValue: '')
-        choice(name: 'Departamento', choices: ['Contabilidad', 'Finanzas', 'Tecnología'], description: 'Escoja Departamento al que pertenece')
-    }
 
     stages {
-        // 2. Generar un password temporal
+        stage('Solicitar Información') {
+            steps {
+                script {
+                    def userInput = input(
+                        id: 'userInput', 
+                        message: 'Por favor, rellene la siguiente información:', 
+                        parameters: [
+                            string(name: 'LOGIN', defaultValue: '', description: 'Ingrese su login'),
+                            string(name: 'NOMBRE', defaultValue: '', description: 'Ingrese su nombre'),
+                            string(name: 'APELLIDO', defaultValue: '', description: 'Ingrese su apellido'),
+                            choice(name: 'DEPARTAMENTO', choices: ['Finanzas', 'Contabilidad', 'Tecnología'], description: 'Seleccione el departamento')
+                        ]
+                    )
+                    
+                    echo "Login: ${userInput['LOGIN']}"
+                    echo "Nombre: ${userInput['NOMBRE']}"
+                    echo "Apellido: ${userInput['APELLIDO']}"
+                    echo "Departamento: ${userInput['DEPARTAMENTO']}"
+
+                     // 2. Generar un password temporal
         stage('Generar password temporal') {
             steps {
                 script {
@@ -25,8 +38,12 @@ pipeline {
                 script {
                     sh "useradd -m -s /bin/bash -c '${params.NombreApellido}' -G ${params.Departamento} ${params.Login}"
                     sh "echo ${params.Login}:${passwordTemporal} | chpasswd"
+
                 }
             }
-        }
-    }
+        }
+
+        
+    }
 }
+
