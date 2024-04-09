@@ -1,23 +1,57 @@
+// return a temporal password
+def generatePassword() {
+    def password = UUID.randomUUID().toString().replaceAll('-', '').take(8)
+    return password
+}
 pipeline {
     agent any
     parameters {
-        string(name: 'NOMBRE', defaultValue: '', description: 'Ingrese el nombre del usuario')
-        string(name: 'APELLIDO', defaultValue: '', description: 'Ingrese el apellido del usuario')
-        choice(name: 'DEPARTAMENTO', choices: ['Finanzas', 'Contabilidad', 'Tecnología'], description: 'Seleccione el departamento')
+        string (name: 'login', defaultValue: '', description: 'Ingresa el login')
+        string (name: 'name', defaultValue: '', description: 'Ingresa el nombre')
+        string (name: 'lastname', defaultValue: '', description: 'Ingresa el apellido')
+        choice (name: 'department', choices: ['contabilidad','finanzas','tecnologia'], description: 'Selecciona el departamento')
     }
     stages {
-        stage('Generar Contraseña Temporal') {
-            steps {
-                script {
-                    // Generar una contraseña temporal. Puedes personalizar la lógica según tus necesidades.
-                    def tempPassword = UUID.randomUUID().toString().substring(0, 8)
-                    echo "Contraseña temporal generada: ${tempPassword}"
-                    // Aquí puedes agregar el código para crear el usuario con la contraseña temporal
-                    // Por ejemplo, si estás interactuando con una base de datos o un sistema externo, puedes hacerlo aquí.
+        stage ('Crea una password temporal'){
+            steps{
+                script{
+                    def password = generatePassword().toString()
+                    echo "Password temporal: ${password}"
                 }
             }
         }
+        stage ('Crea el usuario y asigna el grupo') {
+            steps {
+                sh "sudo useradd -m -s /bin/bash ${params.login}"
+                sh "sudo usermod -aG ${params.department} ${params.login}"
+            }
+        }
+        stage ('Asigna la password temporal') {
+            steps {
+                echo "${params.login}:${password}"
+                sh "echo ${params.login}:${password} | sudo chpasswd"
+            }
+        }
+        stage ('Expirar la password temporal') {
+            steps {
+                sh "sudo passwd -e ${params.login}"
+            }
+        }
     }
-}
-              
+    post {
+        success {
+                echo "Usuario: ${params.login}"
+                echo "Password: ${password}"
+                echo "Departamento: ${params.department}"
+        }
+        aborted {
+            echo "El usuario no fue creado"
+            sh "sudo userdel -r ${params.login}"
+        }
+        failure {
+            echo "No se pudo crear el provisionamiento y el usuario fue eliminado"
+            sh "sudo userdel -r ${params.login}"
+        }
+    }
 
+}
