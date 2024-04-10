@@ -12,4 +12,3 @@ pipeline {
                 sh "npm test"
             }
     }
-} 
