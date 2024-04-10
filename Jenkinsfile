@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+    tools {nodejs "node"}
     stages {
         stage ('Instalar dependencias para Nodejs'){
             steps{
@@ -11,4 +11,6 @@ pipeline {
             steps{
                 sh "npm test"
             }
+        }
     }
+}
