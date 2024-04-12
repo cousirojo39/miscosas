@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    tools {nodejs "Ultima version"}
+    tools {nodejs "Nodejs"}
     stages {
         stage ('Instalar dependencias de Nodejs'){
             steps{
